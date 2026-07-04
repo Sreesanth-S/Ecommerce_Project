@@ -17,8 +17,17 @@ def register(request):
 
     refresh = RefreshToken.for_user(user)
 
-    return Response({"access":str(refresh.access_token),
-                     "refresh":str(refresh)}, status=status.HTTP_201_CREATED)
+    response = Response({"message":"Registered succesfully",
+                         "access":str(refresh.access_token)}, status=status.HTTP_201_CREATED)
+
+    response.set_cookie(key="refresh_token",
+                        value=str(refresh),
+                        httponly=True,
+                        # secure=True,
+                        samesite="Lax",
+                        max_age=7*24*60*60)
+
+    return response
 
 @api_view(["POST"])
 def login_view(request):
@@ -29,5 +38,15 @@ def login_view(request):
 
     refresh = RefreshToken.for_user(user)
 
-    return Response({"access":str(refresh.access_token),
-                     "refresh":str(refresh)}, status=status.HTTP_200_OK)
+    response = Response({"message":"Login successful",
+                         "access":str(refresh.access_token)}, status=status.HTTP_200_OK)
+
+    response.set_cookie(key="refresh_token",
+                        value=str(refresh),
+                        httponly=True,
+                        # secure=True,
+                        samesite="Lax",
+                        max_age=7*24*60*60)
+
+    return response
+
