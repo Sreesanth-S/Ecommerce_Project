@@ -1,11 +1,12 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model, authenticate
+from django.contrib.auth.password_validation import validate_password
 
 User = get_user_model()
 
 class RegisterSerializer(serializers.ModelSerializer):
 
-    password = serializers.CharField(write_only=True, min_length=8)
+    password = serializers.CharField(write_only=True, validators=[validate_password])
 
     class Meta:
         model = User
@@ -56,3 +57,41 @@ class LoginSerializer(serializers.Serializer):
         attrs["user"] = user
         return attrs
 
+class UserProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = [
+            "id",
+            "username",
+            "email",
+            "phone_no",
+            # "profile_picture",
+            "is_verified",
+            "date_joined",
+            "updated_at"
+        ]
+
+        read_only_fields = [
+            "id",
+            "is_verified",
+            "date_joined",
+            "updated_at"
+        ]
+
+    def validate_email(self, value):
+        user = self.instance
+        if User.objects.filter(email=value).exclude(id=user.id).exists():
+            raise serializers.ValidationError("Email already exists")
+        return value
+
+    def validate_phone_no(self, value):
+        user = self.instance
+        if User.objects.filter(phone_no=value).exclude(id=user.id).exists():
+            raise serializers.ValidationError("Phone No. already exists")
+        return value
+
+    def validate_username(self, value):
+        user = self.instance
+        if User.objects.filter(username=value).xclude(id=user.id).exists():
+            raise serializers.ValidationError("Username already exists")
+        return value
