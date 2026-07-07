@@ -65,7 +65,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
             "username",
             "email",
             "phone_no",
-            # "profile_picture",
+            "profile_picture",
             "is_verified",
             "date_joined",
             "updated_at"
@@ -95,3 +95,32 @@ class UserProfileSerializer(serializers.ModelSerializer):
         if User.objects.filter(username=value).exclude(id=user.id).exists():
             raise serializers.ValidationError("Username already exists")
         return value
+
+    def validate_profile_picture(self, value):
+        if value.size > 2*1024*1024:
+            raise serializers.ValidationError("Image should be less than 2 MB")
+
+        if value.content_type not in [
+            "image/jpeg",
+            "image/png"
+        ]:
+            raise serializers.ValidationError("Only jpeg/png are allowed")
+
+        return value
+
+    
+class ChangePasswordSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ["password"]
+
+    old_password = serializers.CharField(write_only=True)
+    new_password = serializers.CharField(write_only=True, validators=["validate_password"])
+
+    confirm_password = serializers.CharField(write_only=True)
+
+    def validate(self, attrs):
+        if attrs["confirm_password"] != attrs["new_password"]:
+            raise serializers.ValidationError("password do not match")
+
+        return attrs

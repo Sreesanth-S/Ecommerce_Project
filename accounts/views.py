@@ -1,14 +1,11 @@
+from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
-from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer
-from .serializer import RegisterSerializer, LoginSerializer, UserProfileSerializer
+from .serializer import RegisterSerializer, LoginSerializer, UserProfileSerializer, ChangePasswordSerializer
 
-@api_view(["GET"])
-def home(request):
-    return Response({"message":"welcome to StackShop API!!"})
 
 @api_view(["POST"])
 def register(request):
@@ -32,6 +29,7 @@ def register(request):
                         max_age=7*24*60*60)
 
     return response
+
 
 @api_view(["POST"])
 def login_view(request):
@@ -59,15 +57,12 @@ def login_view(request):
 
 @api_view(["GET","PUT", "PATCH"])
 @permission_classes([IsAuthenticated])
-def update_profile(request):
+def profile(request):
     if request.method == "GET":
         serializer = UserProfileSerializer(request.user)
-        return Response({"user":serializer.data})
+        return Response({"user":serializer.data}, status=status.HTTP_200_OK)
 
-    if request.method == "PUT":
-        serializer = UserProfileSerializer(request.user, data=request.data)
-    else:
-        serializer = UserProfileSerializer(request.user, data=request.data, partial=True)
+    serializer = UserProfileSerializer(request.user, data=request.data, partial=(request.method == "PATCH"))
 
     serializer.is_valid(raise_exception=True)
 
@@ -75,6 +70,34 @@ def update_profile(request):
 
     return Response({"message":"profile updated successfully",
                      "user":serializer.data}, status=status.HTTP_200_OK)
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def change_password(request):
+    serializer = ChangePasswordSerializer(data=request.data)
+
+    serializer.is_valid(raise_exception=True)
+
+    user = request.user
+
+    if not user.check_password(serializer.validated_data["old_password"]):
+        return Response({"detail":"old password is incorrect"}, status=status.HTTP_400_BAD_REQUEST)
+
+    user.set_password(serializer.validated_data["new_password"])
+    user.save()
+
+    return Response({"message":"password updated successfully"}, status=status.HTTP_200_OK)
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def logout(request):
+    response = Response({"message":"logged out successfully"}, status=status.HTTP_200_OK)
+
+    response.delete_cookie("refresh_token")
+
+    return response
 
 
 @api_view(["POST"])
@@ -99,13 +122,4 @@ def refresh_token(request):
                             # secure=True,
                             samesite="Lax",
                             max_age=7*24*60*60)
-    return response
-
-@api_view(["POST"])
-@permission_classes([IsAuthenticated])
-def logout(request):
-    response = Response({"message":"logged out successfully"})
-
-    response.delete_cookie("refresh_token")
-
     return response
