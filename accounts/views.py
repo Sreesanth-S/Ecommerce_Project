@@ -13,6 +13,7 @@ def home(request):
 @api_view(["POST"])
 def register(request):
     serializer = RegisterSerializer(data=request.data)
+
     serializer.is_valid(raise_exception=True)
 
     user = serializer.save()
@@ -35,6 +36,7 @@ def register(request):
 @api_view(["POST"])
 def login_view(request):
     serializer = LoginSerializer(data=request.data)
+
     serializer.is_valid(raise_exception=True)
 
     user = serializer.validated_data["user"]
@@ -105,5 +107,5 @@ def logout(request):
     response = Response({"message":"logged out successfully"})
 
     response.delete_cookie("refresh_token")
-    
+
     return response
