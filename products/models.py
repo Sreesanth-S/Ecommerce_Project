@@ -48,6 +48,7 @@ class Product(models.Model):
     brand = models.ForeignKey(Brand,
                               on_delete=models.CASCADE,
                               related_name="products")
+    stock = models.PositiveIntegerField(default=0)
     is_active = models.BooleanField(default=True)
     is_featured = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -72,7 +73,7 @@ class ProductVariant(models.Model):
     sku = models.CharField(max_length=100, unique=True)
     color = models.CharField(max_length=30, blank=True)
     size = models.CharField(max_length=30, blank=True)
-    price = models.DecimalField(max_digits=10, decimal_places=2)
+    price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     storage = models.CharField(max_length=30, blank=True)
     stock = models.PositiveIntegerField(default=0)
     is_active = models.BooleanField(default=True)
