@@ -39,7 +39,9 @@ class ProductSerializer(serializers.ModelSerializer):
             "slug",
             "description",
             "category",
+            "category_id",
             "brand",
+            "brand_id",
             "price",
             "sale_price",
             "discount_percentage",
@@ -50,17 +52,24 @@ class ProductSerializer(serializers.ModelSerializer):
             "is_featured",
         ]
 
-    category = CategorySerializer(read_only=True)
-    brand = BrandSerializer(read_only=True)
+    category = CategorySerializer(read_only=True, read_only=True)
+    category_id = serializers.PrimaryKeyRelatedField(
+        queryset = Category.objects.all(),
+        source="category",
+        write_only=True
+    )
+    brand = BrandSerializer(read_only=True, read_only=True)
+    brand_id = serializers.PrimaryKeyRelatedField(
+        queryset = Brand.objects.all(),
+        source = "brand",
+        write_only = True
+    )
     images = ProductImageSerializer(many=True, read_only=True)
     variants = ProductVariantSerializer(many=True, read_only=True)
 
     discount_percentage = serializers.SerializerMethodField()
     average_rating = serializers.SerializerMethodField()
     review_count = serializers.SerializerMethodField()
-
-    def get_effective_price(self, obj):
-        return obj.sale_price or obj.price
 
     def get_discount_percentage(self, obj):
         if not obj.sale_price:
@@ -109,5 +118,21 @@ class ProductImageSerializer(serializers.ModelSerializer):
 class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = Review
-        fields = "__all__"
+        fields = [
+            "id",
+            "user",
+            "product",
+            "rating",
+            "comment",
+            "created_at",
+        ]
         read_only_fields = ["user"]
+
+    def validate(self, attrs):
+        user = self.context["request"].user
+        product = attrs.get("product")
+
+        if Review.objects.filter(useer=user, product=product).exists():
+            raise serializers.ValidationError("You have already reviewed this product")
+
+        return attrs

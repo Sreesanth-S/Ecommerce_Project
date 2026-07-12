@@ -99,7 +99,7 @@ class ProductViewSet(AdminOrReadOnlyViewSet):
 
 class ProductImageViewSet(AdminOrReadOnlyViewSet):
     queryset = ProductImage.objects.all()
-    serializer = ProductImageSerializer
+    serializer_class = ProductImageSerializer
 
     filterset_fields = [
         DjangoFilterBackend,
@@ -113,7 +113,7 @@ class ProductImageViewSet(AdminOrReadOnlyViewSet):
 
 
 class ProductVariantViewSet(AdminOrReadOnlyViewSet):
-    queryset = ProductVariant.objects.all()
+    queryset = ProductVariant.objects.select_related("products")
     serializer_class = ProductVariantSerializer
 
     filter_backends = [

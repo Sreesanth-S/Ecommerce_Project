@@ -108,14 +108,14 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
         return value
 
-    
+
 class ChangePasswordSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ["password"]
 
     old_password = serializers.CharField(write_only=True)
-    new_password = serializers.CharField(write_only=True, validators=["validate_password"])
+    new_password = serializers.CharField(write_only=True, validators=[validate_password])
 
     confirm_password = serializers.CharField(write_only=True)
 
