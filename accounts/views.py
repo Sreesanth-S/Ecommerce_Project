@@ -4,6 +4,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer
+from django.conf import settings
 from .serializers import RegisterSerializer, LoginSerializer, UserProfileSerializer, ChangePasswordSerializer
 
 
@@ -24,7 +25,7 @@ def register(request):
     response.set_cookie(key="refresh_token",
                         value=str(refresh),
                         httponly=True,
-                        # secure=True,
+                        secure=settings.JWT_COOKIE_SECURE,
                         samesite="Lax",
                         max_age=7*24*60*60)
 
@@ -48,7 +49,7 @@ def login_view(request):
     response.set_cookie(key="refresh_token",
                         value=str(refresh),
                         httponly=True,
-                        # secure=True,
+                        secure=settings.JWT_COOKIE_SECURE,
                         samesite="Lax",
                         max_age=7*24*60*60)
 
@@ -119,7 +120,7 @@ def refresh_token(request):
         response.set_cookie(key="refresh_token",
                             value=data.get("refresh"),
                             httponly=True,
-                            # secure=True,
+                            secure=settings.JWT_COKIE_SECURE,
                             samesite="Lax",
                             max_age=7*24*60*60)
     return response
