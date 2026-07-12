@@ -4,7 +4,12 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 from .permissions import IsReviewOwner
 from .models import Product, Category, Brand, ProductVariant, ProductImage, Review
-from .serializers import ProductSerializer, CategorySerializer, BrandSerializer, ProductVariantSerializer, ProductImageSerializer, ReviewSerializer
+from .serializers import (ProductSerializer,
+                          CategorySerializer,
+                          BrandSerializer,
+                          ProductVariantSerializer,
+                          ProductImageSerializer,
+                          ReviewSerializer)
 
 class AdminOrReadOnlyViewSet(ModelViewSet):
     def get_permissions(self):
@@ -55,7 +60,11 @@ class CategoryViewSet(AdminOrReadOnlyViewSet):
 
 
 class ProductViewSet(AdminOrReadOnlyViewSet):
-    queryset = Product.objects.all()
+    queryset = Product.objects.select_related(
+        "category", "brand"
+        ).prefetch_related(
+            "images", "variants", "reviews"
+        )
     serializer_class = ProductSerializer
     lookup_field = "slug"
 

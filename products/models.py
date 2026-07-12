@@ -3,23 +3,10 @@ from accounts.models import Users
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.utils.text import slugify
 
-class Category(models.Model):
-    name = models.CharField(max_length=30, unique=True)
-    slug = models.SlugField(unique=True)
-    description = models.TextField(blank=True)
-
-    def save(self, *args, **kwargs):
-        if not self.slug:
-            self.slug = slugify(self.name)
-        super().save(*args, **kwargs)
-
-    def __str__(self):
-        return self.name
-
 
 class Brand(models.Model):
     name = models.CharField(max_length=30, unique=True)
-    slug = models.SlugField(unique=True)
+    slug = models.SlugField(unique=True, blank=True)
     logo = models.ImageField(upload_to="brand_logos/",
                              blank=True,
                              null=True)
@@ -33,15 +20,29 @@ class Brand(models.Model):
         return self.name
 
 
+class Category(models.Model):
+    name = models.CharField(max_length=30, unique=True)
+    slug = models.SlugField(unique=True, blank=True)
+    description = models.TextField(blank=True)
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.name
+
+
 class Product(models.Model):
     name = models.CharField(max_length=100)
-    slug = models.SlugField(unique=True)
+    slug = models.SlugField(unique=True, blank=True)
     description = models.TextField(blank=True)
     category = models.ForeignKey(Category,
                                  on_delete=models.CASCADE,
                                  related_name="products")
     price = models.DecimalField(max_digits=10, decimal_places=2)
-    discount_price = models.DecimalField(max_digits=10,
+    sale_price = models.DecimalField(max_digits=10,
                                          decimal_places=2,
                                          blank=True,
                                          null=True)
@@ -54,6 +55,10 @@ class Product(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    @property
+    def effective_price(self):
+        return self.sale_price or self.price
+    
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = slugify(self.name)
@@ -74,9 +79,23 @@ class ProductVariant(models.Model):
     color = models.CharField(max_length=30, blank=True)
     size = models.CharField(max_length=30, blank=True)
     price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    sale_price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     storage = models.CharField(max_length=30, blank=True)
     stock = models.PositiveIntegerField(default=0)
     is_active = models.BooleanField(default=True)
+
+    @property
+    def effective_price(self):
+        if self.sale_price:
+            return self.sale_price
+
+        if self.price:
+            return self.price
+
+        if self.product.sale_price:
+            return self.product.sale_price
+
+        return self.product.price
 
     def __str__(self):
         return f"{self.product} ({self.color}, {self.size}, {self.storage})"
