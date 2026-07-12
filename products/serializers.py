@@ -52,13 +52,13 @@ class ProductSerializer(serializers.ModelSerializer):
             "is_featured",
         ]
 
-    category = CategorySerializer(read_only=True, read_only=True)
+    category = CategorySerializer(read_only=True)
     category_id = serializers.PrimaryKeyRelatedField(
         queryset = Category.objects.all(),
         source="category",
         write_only=True
     )
-    brand = BrandSerializer(read_only=True, read_only=True)
+    brand = BrandSerializer(read_only=True)
     brand_id = serializers.PrimaryKeyRelatedField(
         queryset = Brand.objects.all(),
         source = "brand",
@@ -132,7 +132,7 @@ class ReviewSerializer(serializers.ModelSerializer):
         user = self.context["request"].user
         product = attrs.get("product")
 
-        if Review.objects.filter(useer=user, product=product).exists():
+        if Review.objects.filter(user=user, product=product).exists():
             raise serializers.ValidationError("You have already reviewed this product")
 
         return attrs
