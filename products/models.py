@@ -97,6 +97,7 @@ class Review(models.Model):
     class Meta:
         constraints = [models.UniqueConstraint(fields=["user", "product"],
                                                name="unique_review")]
+        ordering = ["-created_at"]
 
     user = models.ForeignKey(Users,
                              on_delete=models.CASCADE,
